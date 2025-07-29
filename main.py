@@ -1,12 +1,45 @@
-import pyautogui
+import pydirectinput
 import time
 import numpy as np
+import pyautogui
 
-w, h = pyautogui.size()  # Get the width and height of the screen
-currentMouseX, currentMouseY = pyautogui.position()  # Get the current mouse position
+def random_movement():
+    """Simulates random movement by pressing W, A, S, or D for a random duration."""
+    key = np.random.choice(['w', 'a', 's', 'd'])
+    duration = np.random.uniform(0.1, 0.5)
+    pydirectinput.keyDown(key)
+    time.sleep(duration)
+    pydirectinput.keyUp(key)
+
+
+def random_rotation():
+    """Simulates random rotation by moving the mouse horizontally."""
+    x_offset = np.random.randint(-200, 200)
+    pydirectinput.moveRel(x_offset, 0, duration=1.7, relative=True)
+
+
+def random_jump():
+    """Simulates a jump by pressing the spacebar."""
+    pydirectinput.press('space')
+
+
+def click_ready_button():
+    """Detects and clicks the 'Ready' button if it appears on the screen."""
+    location = pyautogui.locateCenterOnScreen('ready.png', confidence=0.8)
+    if location:
+        pyautogui.click(location)
+
 
 while True:
-    x = np.random.randint(940, 980)
-    y = np.random.randint(530, 550)
-    pyautogui.moveTo(x, y, duration=2.7)  # Move the mouse to a random position
-    time.sleep(3)  # Wait for 1 second before the next move
+    click_ready_button()
+    action = np.random.choice(
+        ['move', 'rotate', 'jump'],
+        p=[0.48, 0.48, 0.04]  # 48% move, 48% rotate, 4% jump
+    )
+    if action == 'move':
+        random_movement()
+    elif action == 'rotate':
+        random_rotation()
+    elif action == 'jump':
+        random_jump()
+    time.sleep(np.random.uniform(0.1, 0.5))
