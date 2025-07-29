@@ -13,10 +13,10 @@ def count_players():
     """Extracts the player count from the screen using OCR on the scoreboard."""
     try:
         pydirectinput.keyDown('tab')
-        time.sleep(1.0)  # allow scoreboard to render
+        time.sleep(1.0) 
 
         screenshot = ImageGrab.grab()
-        crop_box = (920, 70, 1180, 130)  # tweak if needed for your resolution
+        crop_box = (920, 70, 1180, 130) 
         cropped = screenshot.crop(crop_box)
 
         gray = ImageOps.grayscale(cropped)
@@ -25,7 +25,6 @@ def count_players():
         high_contrast = enhancer.enhance(2.0)
         resized = high_contrast.resize((cropped.width * 2, cropped.height * 2))
 
-        # Remove whitelist if your Tesseract version doesn't support it
         custom_config = r'--oem 3 --psm 6'
         text = pytesseract.image_to_string(resized, config=custom_config)
         text = text.strip()
@@ -106,6 +105,7 @@ def exit_and_find_new_game():
 last_q_right_click_time = time.time()
 while True:
     click_ready_button()
+    time.sleep(15)
     player_count = count_players()
     if player_count < 3 and player_count != 0:
         exit_and_find_new_game()
