@@ -2,7 +2,49 @@ import pydirectinput
 import time
 import numpy as np
 import pyautogui
-from pyautogui import ImageNotFoundException
+from pyautogui import ImageNotFoundException as PyAutoGUIImageNotFoundException
+from pyscreeze import ImageNotFoundException as PyScreezeImageNotFoundException
+import pytesseract
+from PIL import Image, ImageOps, ImageEnhance, ImageGrab
+import re
+
+
+def count_players():
+    """Extracts the player count from the screen using OCR on the scoreboard."""
+    try:
+        pydirectinput.keyDown('tab')
+        time.sleep(1.0)  # allow scoreboard to render
+
+        screenshot = ImageGrab.grab()
+        crop_box = (920, 70, 1180, 130)  # tweak if needed for your resolution
+        cropped = screenshot.crop(crop_box)
+
+        gray = ImageOps.grayscale(cropped)
+        inverted = ImageOps.invert(gray)
+        enhancer = ImageEnhance.Contrast(inverted)
+        high_contrast = enhancer.enhance(2.0)
+        resized = high_contrast.resize((cropped.width * 2, cropped.height * 2))
+
+        # Remove whitelist if your Tesseract version doesn't support it
+        custom_config = r'--oem 3 --psm 6'
+        text = pytesseract.image_to_string(resized, config=custom_config)
+        text = text.strip()
+
+        match = re.search(r'Players\s*\(\s*(\d{1,2})\s*/\s*16\s*\)', text)
+        if match:
+            player_count = int(match.group(1))
+            print(f"Detected players: {player_count}")
+            return player_count
+        else:
+            print(f"OCR failed, text read: {text}")
+            return 0
+
+    except Exception as e:
+        print(f"Error during OCR player count: {e}")
+        return 0
+
+    finally:
+        pydirectinput.keyUp('tab')
 
 def random_movement():
     """Simulates random movement by pressing W, A, S, or D for a random duration."""
@@ -42,13 +84,32 @@ def click_ready_button():
         location = pyautogui.locateCenterOnScreen('ready.png', confidence=0.9)
         if location:
             pyautogui.click(location)
-    except ImageNotFoundException:
+    except (PyAutoGUIImageNotFoundException):
         print("Ready button not found (confidence too low or not present).")
+
+
+def exit_and_find_new_game():
+    """Exits the current game and finds a new one."""
+    print("Player count below 3, reconnecting...")
+    pydirectinput.press('esc')
+    time.sleep(1)
+    for button_name in ['exit.png', 'play.png', 'quickmatch.png', 'findgame.png']:
+        location = pyautogui.locateCenterOnScreen(button_name, confidence=0.9)
+        if location:
+            pyautogui.click(location)
+            time.sleep(1)
+        else:
+            print(f"Could not find {button_name}, aborting reconnect.")
+            break
 
 
 last_q_right_click_time = time.time()
 while True:
     click_ready_button()
+    player_count = count_players()
+    if player_count < 3 and player_count != 0:
+        exit_and_find_new_game()
+        time.sleep(20)
     random_left_click()
     action = np.random.choice(
         ['move', 'rotate', 'jump'],
