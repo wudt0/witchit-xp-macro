@@ -15,7 +15,7 @@ def random_movement():
 
 def random_rotation():
     """Simulates random rotation by moving the mouse horizontally."""
-    x_offset = np.random.randint(-200, 200)
+    x_offset = np.random.randint(-500, 500)
     pydirectinput.moveRel(x_offset, 0, duration=0.8, relative=True)
 
 
