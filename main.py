@@ -3,7 +3,6 @@ import time
 import numpy as np
 import pyautogui
 from pyautogui import ImageNotFoundException as PyAutoGUIImageNotFoundException
-from pyscreeze import ImageNotFoundException as PyScreezeImageNotFoundException
 import pytesseract
 from PIL import Image, ImageOps, ImageEnhance, ImageGrab
 import re
@@ -46,17 +45,24 @@ def count_players():
 
 def random_movement():
     """Simulates random movement by pressing W, A, S, or D for a random duration."""
-    key = np.random.choice(['w', 'a', 's', 'd'])
-    duration = np.random.uniform(0.1, 0.5)
+    key = np.random.choice(['a', 's', 'd'])
+    duration = np.random.uniform(0.5, 1.2)
     pydirectinput.keyDown(key)
     time.sleep(duration)
     pydirectinput.keyUp(key)
 
 
 def random_rotation():
-    """Simulates random rotation by moving the mouse horizontally."""
-    x_offset = np.random.randint(-500, 500)
-    pydirectinput.moveRel(x_offset, 0, duration=0.8, relative=True)
+    """Simulates smoother horizontal mouse rotation."""
+    total_offset = np.random.randint(-1200, 1200)
+    steps = 5
+    delay_per_step = 0.01
+
+    step_size = total_offset / steps
+
+    for _ in range(steps):
+        pydirectinput.moveRel(int(step_size), 0, relative=True)
+        time.sleep(delay_per_step)
 
 
 def random_jump():
@@ -65,7 +71,7 @@ def random_jump():
 
 
 def random_left_click():
-    """Simulates a random left click."""
+    """Simulates a simple left mouse click."""
     pydirectinput.click(button='left')
     time.sleep(np.random.uniform(0.2, 1))
 
@@ -100,8 +106,10 @@ def exit_and_find_new_game():
             print(f"Could not find {button_name}, aborting reconnect.")
             break
 
+
 last_q_right_click_time = time.time()
 while True:
+    pydirectinput.keyDown('w')
     if click_ready_button():
         click_ready_button()
         time.sleep(15)
@@ -112,7 +120,7 @@ while True:
     random_left_click()
     action = np.random.choice(
         ['move', 'rotate', 'jump'],
-        p=[0.48, 0.48, 0.04]  # 48% move, 48% rotate, 4% jump
+        p=[0.45, 0.45, 0.10]  # 45% move, 45% rotate, 10% jump
     )
     if action == 'move':
         random_movement()
