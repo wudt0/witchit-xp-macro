@@ -16,23 +16,22 @@ def count_players():
         time.sleep(1.0) 
 
         screenshot = ImageGrab.grab()
-        crop_box = (920, 70, 1180, 130) 
+        crop_box = (760, 0, 1160, 50)
         cropped = screenshot.crop(crop_box)
 
         gray = ImageOps.grayscale(cropped)
-        inverted = ImageOps.invert(gray)
-        enhancer = ImageEnhance.Contrast(inverted)
-        high_contrast = enhancer.enhance(2.0)
-        resized = high_contrast.resize((cropped.width * 2, cropped.height * 2))
+        resized = gray.resize((gray.width * 2, gray.height * 2), Image.LANCZOS)
+        enhanced = ImageEnhance.Contrast(resized).enhance(2.5)
 
         custom_config = r'--oem 3 --psm 6'
         text = pytesseract.image_to_string(resized, config=custom_config)
-        text = text.strip()
 
-        match = re.search(r'Players\s*\(\s*(\d{1,2})\s*/\s*16\s*\)', text)
+
+        print(f"OCR raw text: {text}")
+
+        match = re.search(r'(\d{1,2})\s*/\s*\d{1,2}', text)
         if match:
             player_count = int(match.group(1))
-            print(f"Detected players: {player_count}")
             return player_count
         else:
             print(f"OCR failed, text read: {text}")
@@ -101,15 +100,15 @@ def exit_and_find_new_game():
             print(f"Could not find {button_name}, aborting reconnect.")
             break
 
-
 last_q_right_click_time = time.time()
 while True:
-    click_ready_button()
-    time.sleep(15)
+    if click_ready_button():
+        click_ready_button()
+        time.sleep(15)
     player_count = count_players()
     if player_count < 3 and player_count != 0:
         exit_and_find_new_game()
-        time.sleep(20)
+        time.sleep(5)
     random_left_click()
     action = np.random.choice(
         ['move', 'rotate', 'jump'],
